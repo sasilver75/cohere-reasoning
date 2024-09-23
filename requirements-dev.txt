@@ -1,5 +1,5 @@
 black
-pytest
-pytest-cov
 coverage
 pre-commit
+pytest
+pytest-cov
