@@ -15,6 +15,12 @@ pip install -r requirements.txt
 pip install -r requirements-dev.txt
 ```
 
+To use the Cohere API, you'll need an API key. Create an `.env` file with the following:
+```bash
+COHERE_API_KEY=your_actual_api_key_here
+```
+This environment variable file is git-ignored, so your precious credentials won't be checked into the git repository.
+
 ## Project Structure
 
 ...TBD...

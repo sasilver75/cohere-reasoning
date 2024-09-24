@@ -1,4 +1,6 @@
+cohere
 datasets
 matplotlib
 numpy
+python-dotenv
 torch
