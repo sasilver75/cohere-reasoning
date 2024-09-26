@@ -41,4 +41,4 @@ print("Loaded cn_k12 dataset")
 
 # Filter to only the cn_k12 subset
 questions = df["problem"]
-print(questions.iloc[0])
+print(questions.head())

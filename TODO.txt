@@ -1,0 +1,44 @@
+To-do list:
+
+[x] Get the HuggingFace dataset
+[x] Get the Cohere API key
+[] Explore and Preprocess the dataset
+    - Do we need to step-ify the data?
+    - Some of the problems are already in a step-ified format, but some are not.
+    - Do we want to filter the number of records we use?
+[] Perturb the dataset 
+    - Which model should we use to perturb the data, if we want to start by exploring off-policy?
+    - What prompt should we use to perturb the data?
+        - I've noticed that sometimes the model is "rewriting" the user's solution, rather than rephrasing it.
+            - I'm not sure whether it's adding material differences or not.
+        - Can we (stepify-and-)perturb-and-truncate it one-shot, or do we need to do it in multiple steps?
+        - I used the prompt generator tool here: https://console.anthropic.com/dashboard
+            - It made a good point that we don't necessarily need to provide the question along with the solution; it should be possible
+            to provide the steps of the solution without knowing the question... though I wonder if it would help (or hurt - would it encourage rewriting?) to provide it.
+
+TOMORROW:
+- Create the prompt using the aNthropic generator for the "perturb" step.
+- Include in the prmopt the taxonomy
+- Use the two (or more) examples you already posted in Slack
+
+
+Meeting to-do:
+- Decide how to handle the truncation
+    - Ask the model to do it, or try to have a roughly even distribution and do it programmatically?
+- Decide which models to test the recovery on
+    - Only on non-base models, right?
+- Decide how to detect the recovery
+- Should I be having 15-25s latency? 
+
+
+
+
+
+<step>
+To ensure the function $f(x) - g(x)$ is defined, we need to consider the domain of the individual logarithmic functions. The domain of $\log_a(1+x)$ is $1+x > 0$, and the domain of $\log_a(1-x)$ is $1-x > 0$.
+</step>
+
+
+Problems I've been having:
+- Model is explicitly including the type of perturbation applied, in the steps (eg [Perturbation: Wrong Formula]])
+- Model is including the change applied (eg ...is also $1+x > 0$ (instead of $1-x > 0$))
