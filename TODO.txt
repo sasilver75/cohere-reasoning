@@ -29,16 +29,11 @@ Meeting to-do:
     - Only on non-base models, right?
 - Decide how to detect the recovery
 - Should I be having 15-25s latency? 
+- I used the default temperature of 0.3 for the perturb step, which seems to work well, but should I be using 0 as a temp??
 
 
-
-
-
-<step>
-To ensure the function $f(x) - g(x)$ is defined, we need to consider the domain of the individual logarithmic functions. The domain of $\log_a(1+x)$ is $1+x > 0$, and the domain of $\log_a(1-x)$ is $1-x > 0$.
-</step>
-
-
-Problems I've been having:
-- Model is explicitly including the type of perturbation applied, in the steps (eg [Perturbation: Wrong Formula]])
+Problems I've been having (and have mostly addressed):
+- Model is explicitly including the type of perturbation applied, in the steps (eg [Perturbation: Wrong Formula])
 - Model is including the change applied (eg ...is also $1+x > 0$ (instead of $1-x > 0$))
+- Problems with adherence to the instructions -- might only output a perturbed chain, and none of the other information.
+    - Should I have it select the random step and the perturbation type before generating the perturbed output?

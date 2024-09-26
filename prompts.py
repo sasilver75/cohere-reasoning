@@ -93,7 +93,6 @@ Provide your output in the following format:
 [Include all steps up to and including the perturbed step. Wrap the collection of steps in <perturbed_chain> tags.]
 </perturbed_chain>
 
-
 <perturbation_info>
 Selected Step: [Number of the step you selected]
 Perturbation Type: [Name of the perturbation type you applied]
@@ -101,6 +100,7 @@ Description: [Description of how you applied the perturbation]
 </perturbation_info>
 
 Ensure that you only perturb one step and that the chain is truncated immediately after that step.
+Ensure that you include the <perturbation_info> information in your output.
 """
 
 PERTURB_SHOTS = [
