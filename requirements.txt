@@ -4,4 +4,3 @@ matplotlib
 numpy
 python-dotenv
 torch
-tqdm_asyncio
