@@ -2,5 +2,6 @@ cohere
 datasets
 matplotlib
 numpy
+openai
 python-dotenv
 torch

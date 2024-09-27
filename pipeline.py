@@ -72,39 +72,6 @@ def postprocess(output: str) -> dict:
     }
 
 
-# # Process solutions into truncated trajectories
-# acc = []
-# for index, row in data.iterrows():
-#     print(f"Processing row {index}")
-
-#     problem = row["problem"]
-#     solution = row["solution"]
-
-#     # Process: No error handling for now
-#     # Note that temperature defaults to 0.3
-#     steps = stepify(solution)
-#     perturbed_and_truncated = perturb_and_truncate(steps)
-#     postprocessed = postprocess(perturbed_and_truncated)
-
-#     # Package the results and accumulate
-#     result = {
-#         "id": index,
-#         "problem": problem,
-#         "solution": solution,
-#         "stepped": steps,
-#         "perturbed": postprocessed["steps"],
-#         "step": postprocessed["perturbation_step"],
-#         "type": postprocessed["perturbation_type"],
-#         "trace": postprocessed["perturbation_trace"]
-#     }
-#     acc.append(result)
-
-# # Save results to CSV file
-# pd.DataFrame(acc).to_csv("datasets/perturbed_solutions.csv", index=False)
-
-# print("Done")
-
-
 async def process_row(index: int, row: pd.Series) -> dict:
     print(f"Processing row {index}")
     problem = row["problem"]
