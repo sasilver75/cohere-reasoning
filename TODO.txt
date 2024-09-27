@@ -37,3 +37,5 @@ Problems I've been having (and have mostly addressed):
 - Model is including the change applied (eg ...is also $1+x > 0$ (instead of $1-x > 0$))
 - Problems with adherence to the instructions -- might only output a perturbed chain, and none of the other information.
     - Should I have it select the random step and the perturbation type before generating the perturbed output?
+- It seems like the OpenAI Python library used to support a client.chat.completions API that let you 
+set the history for user and model... but that's been deprecated. Unsure if I still can
