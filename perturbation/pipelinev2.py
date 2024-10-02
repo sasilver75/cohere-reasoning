@@ -185,18 +185,18 @@ async def process_data(df: pd.DataFrame, n: int, batch_size: int = 50, temperatu
 async def main():
     # Process up to the n'th row from the dataframe. Works just fine if n//bs!=0, or if bs>=n
     input_filename = "datasets/cn_k12_math_problems.csv"
-    n = 100
-    bs = 50
+    n = 25
+    bs = 25
     for temperature, label in [
         (0, "0"),
         (0.3, "3"),
         (0.6, "6"),
     ]:
-        # Determine filename
-        output_filename = f"datasets/perturbed_solutions{label}.csv"
+        # Determine output filename
+        output_filename = f"datasets/perturbed_solutions_{label}.csv"
 
         # Load cn_k12 subset from file
-        df = pd.read_csv("datasets/cn_k12_math_problems.csv", nrows=500)
+        df = pd.read_csv(input_filename, nrows=500)
 
         # Processs and perturb data
         processed = await process_data(df, n, batch_size=bs, temperature=temperature)
