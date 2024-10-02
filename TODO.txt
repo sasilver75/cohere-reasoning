@@ -39,3 +39,12 @@ Problems I've been having (and have mostly addressed):
     - Should I have it select the random step and the perturbation type before generating the perturbed output?
 - It seems like the OpenAI Python library used to support a client.chat.completions API that let you 
 set the history for user and model... but that's been deprecated. Unsure if I still can
+
+-----
+
+I don't see how it's possible to continue a generation 
+using the OpenAI API.
+
+I think I recall seeing recently a post (and 
+I think I saved it or took a screnshot of it on twitter) regarding
+using the Calude API to continue generations.
