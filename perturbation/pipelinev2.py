@@ -1,24 +1,17 @@
 import asyncio
 import os
-import random
 import re
-from typing import Any
 
 import cohere
-import httpx
 import pandas as pd
 import prompts
 from dotenv import load_dotenv
 from tqdm.asyncio import tqdm as atqdm
-from tqdm.auto import tqdm
 
 # Retrieve API key and create a Cohere client
 load_dotenv()
 co = cohere.AsyncClientV2(os.getenv("COHERE_API_KEY"))
 model_name = "command-r-plus-08-2024"  # Latest release of Command-R Plus
-
-# Test the API
-# print(co.chat(model=model_name, messages=[{"role": "user", "content": "Hello, world!"}]))
 
 
 async def stepify(solution: str, index: int) -> str:
@@ -191,19 +184,26 @@ async def process_data(df: pd.DataFrame, n: int, batch_size: int = 50, temperatu
 
 async def main():
     # Process up to the n'th row from the dataframe. Works just fine if n//bs!=0, or if bs>=n
-    n = 3
-    bs = 5  # NOTE:
-    temperature = 0.3
     input_filename = "datasets/cn_k12_math_problems.csv"
-    output_filename = f"datasets/perturbed_solutions.csv"
+    n = 100
+    bs = 50
+    for temperature, label in [
+        (0, "0"),
+        (0.3, "3"),
+        (0.6, "6"),
+    ]:
+        # Determine filename
+        output_filename = f"datasets/perturbed_solutions{label}.csv"
 
-    # Load cn_k12 subset from file
-    df = pd.read_csv("datasets/cn_k12_math_problems.csv", nrows=500)
+        # Load cn_k12 subset from file
+        df = pd.read_csv("datasets/cn_k12_math_problems.csv", nrows=500)
 
-    results = await process_data(df, n, batch_size=bs, temperature=temperature)
+        # Processs and perturb data
+        processed = await process_data(df, n, batch_size=bs, temperature=temperature)
 
-    print(f"Finished processing rows; saving {len(results)} rows to {output_filename}")
-    pd.DataFrame(results).to_csv(output_filename, index=False)
+        # Save results to CSV
+        print(f"Finished processing rows; saving {len(processed)} rows to {output_filename}")
+        pd.DataFrame(processed).to_csv(output_filename, index=False)
 
 
 if __name__ == "__main__":
