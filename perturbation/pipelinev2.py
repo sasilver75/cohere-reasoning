@@ -68,25 +68,22 @@ def postprocess(output: str) -> dict:
     """
     # Extract the steps from the perturbed chain
     steps_match = re.search(r"<perturbed_chain>(.*?)</perturbed_chain>", output, re.DOTALL)
-    steps = steps_match.group(1).strip() if steps_match else ""
-    steps = re.sub(r"</?step>", "", steps).replace("\n", " ").strip()
-    steps = re.sub(r"\s+", " ", steps)  # Replace multiple spaces with a single space
-
-    # Extract the perturbation info
-    perturbation_info_match = re.search(r"<perturbation_info>(.*?)</perturbation_info>", output, re.DOTALL)
-    perturbation_info = perturbation_info_match.group(1).strip() if perturbation_info_match else ""
+    steps = steps_match.group(1).strip() if steps_match else None
+    if steps is not None:
+        steps = re.sub(r"</?step>", "", steps).replace("\n", " ").strip()
+        steps = re.sub(r"\s+", " ", steps)  # Replace multiple spaces with a single space
 
     # Extract the selected step number
-    step_match = re.search(r"Selected Step:\s*(\d+)", perturbation_info)
-    perturbation_step = int(step_match.group(1)) if step_match else None
+    step_match = re.search(r"<selected_step>(.*?)</selected_step>", output, re.DOTALL)
+    perturbation_step = int(step_match.group(1).strip()) if step_match else None
 
     # Extract the perturbation type
-    type_match = re.search(r"Perturbation Type:\s*(.*)", perturbation_info)
-    perturbation_type = type_match.group(1).strip() if type_match else ""
+    type_match = re.search(r"<perturbation_type>(.*?)</perturbation_type>", output, re.DOTALL)
+    perturbation_type = type_match.group(1).strip() if type_match else None
 
     # Extract the description
-    description_match = re.search(r"Description:\s*(.*)", perturbation_info)
-    perturbation_trace = description_match.group(1).strip() if description_match else ""
+    description_match = re.search(r"<description>(.*?)</description>", output, re.DOTALL)
+    perturbation_trace = description_match.group(1).strip() if description_match else None
 
     return {
         "steps": steps,
@@ -121,6 +118,11 @@ async def process_row(df: pd.DataFrame, index: int, temperature: float, semaphor
         except Exception as e:
             print(f"Exception occurred processing row {index}: {e}")
             return None
+
+    if any(val == None for val in postprocessed.values()):
+        missing = [k for k, v in postprocessed.items() if v is None]
+        print(f"Row {index} was not postprocessed successfully; failure to extract {missing}")
+        return None
 
     # Package the results
     result = {
@@ -158,15 +160,13 @@ async def process_batch(df: pd.DataFrame, batch: list[int], batch_number: int, t
     filtered = [result for result in results if result is not None]
 
     print(
-        f"Of {len(results)} rows, {len(filtered)} were processed successfully ({len(results) - len(filtered)} failed)"
+        f"Of {len(results)} rows in batch {batch_number}, {len(filtered)} were processed successfully ({len(results) - len(filtered)} failed)"
     )
 
     return filtered
 
 
-async def process_data(
-    df: pd.DataFrame, n: int, batch_size: int = 50, temperature: float = 0.3, max_concurrency: int = 20, timeout=45
-) -> list:
+async def process_data(df: pd.DataFrame, n: int, batch_size: int = 50, temperature: float = 0.3) -> list[dict]:
     """
     Processes n rows from the cn_k12 dataset CSV file, using batch sizes of size bs when invoking Cohere APIs.
     """
@@ -190,18 +190,20 @@ async def process_data(
 
 
 async def main():
+    # Process up to the n'th row from the dataframe. Works just fine if n//bs!=0, or if bs>=n
+    n = 3
+    bs = 5  # NOTE:
+    temperature = 0.3
+    input_filename = "datasets/cn_k12_math_problems.csv"
+    output_filename = f"datasets/perturbed_solutions.csv"
+
     # Load cn_k12 subset from file
     df = pd.read_csv("datasets/cn_k12_math_problems.csv", nrows=500)
 
-    # Process up to the n'th row from the dataframe
-    n = 100
-    bs = 30
-    max_concurrency = 20
-    temperature = 0.3
-    results = await process_data(df, n, batch_size=bs, temperature=temperature, max_concurrency=max_concurrency)
+    results = await process_data(df, n, batch_size=bs, temperature=temperature)
 
-    print("Finished processing rows")
-    return results
+    print(f"Finished processing rows; saving {len(results)} rows to {output_filename}")
+    pd.DataFrame(results).to_csv(output_filename, index=False)
 
 
 if __name__ == "__main__":

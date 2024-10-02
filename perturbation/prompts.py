@@ -87,22 +87,20 @@ Instructions:
 Provide your output in the following format:
 
 <selected_step>
-[Randomly select an available step, and output the step number.Do not select the last available step. Instead, select an earlier step, preferring step 2 or 3 if they aren't terminal steps.]
+[Randomly select an available step, and output the step number.Do not select the last available step. Instead, select an earlier step, preferring step 2 or 3 if they aren't terminal steps. Do not use newline characters.]
 </selected_step>
 
 <perturbation_type>
-[Select a perturbation type from the list above that is appropriate for the selected step and the problem.]
+[Select a perturbation type from the list above that is appropriate for the selected step and the problem. Do not use newline characters.]
 </perturbation_type>
 
 <perturbed_chain>
 [Include all steps up to and including the perturbed step. Wrap the collection of steps in <perturbed_chain> tags.]
 </perturbed_chain>
 
-<perturbation_info>
-Selected Step: [Number of the step you selected]
-Perturbation Type: [Name of the perturbation type you applied]
-Description: [Description of how you applied the perturbation]
-</perturbation_info>
+<description>
+[Description of the application of the perturbation. Do not use newline characters.]
+</description>
 
 Ensure that you only perturb one step and that the chain is truncated immediately after that step.
 Ensure that you include the <perturbation_info> information in your output.
