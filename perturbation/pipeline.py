@@ -28,11 +28,10 @@ async def stepify(solution: str) -> str:
     return step_response.message.content[0].text
 
 
-async def perturb_and_truncate(steps: str, question: str, temperature: float) -> str:
+async def perturb_and_truncate(steps: str, question: str) -> str:
     perturbed_response = await co.chat(
         model=model_name,
         messages=[{"role": "user", "content": prompts.PERTURB_PROMPT.format(steps=steps, question=question)}],
-        temperature=temperature,
     )
     return perturbed_response.message.content[0].text
 
@@ -71,19 +70,18 @@ def postprocess(output: str) -> dict:
     }
 
 
-async def process_row(df: pd.DataFrame, index: int, temperature: float) -> dict:
+async def process_row(index: int, row: pd.Series) -> dict:
     """
     Given a dataframe and a row_id `index` to process,
     """
     print(f"Processing row {index}")
-    row = df.iloc[index]
     question = row["problem"]
     solution = row["solution"]
 
     # Process: No error handling for now
     # Note that temperature defaults to 0.3
     steps = await stepify(solution)
-    perturbed_and_truncated = await perturb_and_truncate(steps, question, temperature)
+    perturbed_and_truncated = await perturb_and_truncate(steps, question)
     postprocessed = postprocess(perturbed_and_truncated)
 
     # Package the results
@@ -104,19 +102,19 @@ async def main():
     file_path = "datasets/cn_k12_math_problems.csv"
     data = pd.read_csv(file_path, nrows=50)
 
-    TEMPERATURES = [(0, 0), (0.3, 3), (0.6, 6)]
-
     # Process and accumulate
-    for temperature, label in TEMPERATURES:
-        results = []
-        tasks = [process_row(index, row, temperature) for index, row in data.iterrows()]
+    results = []
+    tasks = [process_row(index, row) for index, row in data.iterrows()]
 
-        for task in tqdm(asyncio.as_completed(tasks), total=len(tasks)):
-            result = await task
-            results.append(result)
+    for task in tqdm(asyncio.as_completed(tasks), total=len(tasks)):
+        result = await task
+        results.append(result)
 
-        # Save results to CSV file
-        pd.DataFrame(results).to_csv(f"datasets/perturbed_solutions_{label}.csv", index=False)
-        print(f"Done with {label}")
+    # Save results to CSV file
+    pd.DataFrame(results).to_csv(f"datasets/perturbed_solutions.csv", index=False)
 
     print("Complete")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
