@@ -152,11 +152,12 @@ async def process_batch(df: pd.DataFrame, batch: list[int], batch_number: int, t
 
     filtered = [result for result in results if result is not None]
 
+    n_fails = len(results) - len(filtered)
     print(
-        f"Of {len(results)} rows in batch {batch_number}, {len(filtered)} were processed successfully ({len(results) - len(filtered)} failed)"
+        f"Of {len(results)} rows in batch {batch_number}, {len(filtered)} were processed successfully ({n_fails} failed)"
     )
 
-    return filtered
+    return filtered, n_fails
 
 
 async def process_data(df: pd.DataFrame, n: int, batch_size: int = 50, temperature: float = 0.3) -> list[dict]:
@@ -166,35 +167,34 @@ async def process_data(df: pd.DataFrame, n: int, batch_size: int = 50, temperatu
     print("Processing data")
 
     all_results = []
+    total_failed = 0
     # Generate a list of indices for each batch
     for i in range(0, n, batch_size):
         batch_number = i // batch_size + 1
         batch = list(range(i, min(i + batch_size, n)))
         print(f"Processing batch for indices {batch}")
         # Give the data, the batch ids, and a the sempaphore that limits concurrency
-        results = await process_batch(df, batch, batch_number, temperature)
+        results, n_fail = await process_batch(df, batch, batch_number, temperature)
         all_results.extend(results)
+        total_failed += n_fail
         print(
             f"Processed batch {i//batch_size + 1}/{(n + batch_size - 1)//batch_size}, total results: {len(all_results)}"
         )
 
-    print("Finished processing all data")
+    print(f"Finished processing all data, with {total_failed} failures out of {min(len(df), n)} records")
     return all_results
 
 
 async def main():
     # Process up to the n'th row from the dataframe. Works just fine if n//bs!=0, or if bs>=n
     input_filename = "datasets/cn_k12_math_problems.csv"
-    n = 25
-    bs = 25
+    n = 2
+    bs = 15
     for temperature, label in [
         (0, "0"),
         (0.3, "3"),
         (0.6, "6"),
     ]:
-        # Determine output filename
-        output_filename = f"datasets/perturbed_solutions_{label}.csv"
-
         # Load cn_k12 subset from file
         df = pd.read_csv(input_filename, nrows=500)
 
@@ -202,8 +202,9 @@ async def main():
         processed = await process_data(df, n, batch_size=bs, temperature=temperature)
 
         # Save results to CSV
+        output_filename = f"datasets/perturbed_solutions_{label}.csv"
         print(f"Finished processing rows; saving {len(processed)} rows to {output_filename}")
-        pd.DataFrame(processed).to_csv(output_filename, index=False)
+        pd.DataFrame(processed).sort_values(by="id").to_csv(output_filename, index=False)
 
 
 if __name__ == "__main__":
