@@ -1,0 +1,39 @@
+Just spot-check some few 10s of examples (let's hope for 80% or some examples)
+They can even recruit some people who are experts
+- They have some in-house annotators, but for things liek coding they have external annotators.
+- It might be nice to use human review to find the good exemplars from the auto-generated ones
+
+
+Re: distribution of selected perturbation types
+- It might be due to 
+
+For the questions we already have, do we have some 
+
+The types of questions in this dataset might not be that diverse.
+We can look through it and choose the perturbation types that are intuitively applicable to the dataset (but note that we're using the CNK12 subset for now)
+
+
+Re: Creating multiple perturbations from a single example (type, position)
+- For now, we do the peturbation and truncation
+- Ask the model to choose somewhere critical in the solution and apply the perturbation there
+- Maybe try this with 5-10 and see if it's obviously good at doing this.
+
+IF you maybe ask the moel to do some reasoning before the choice.
+
+Selected step
+Perturbation type
+Perturbed chain
+Perturbation information
+
+
+Should I use Temperature 0 for the ?
+> I think so, yes. It limits us to generating 1 example 
+> Post a sidebyside of 0, .3, and a few .6s
+
+
+GPT4omini and Sonnet 3.5 and Newest Cohere
+
+For the verification of recovery and getting the right answer
+- Maybe in the prompt structure, we can explicitly require the model to put the answer in some sort of <answer> tag
+- Leave that for later
+

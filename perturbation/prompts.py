@@ -44,9 +44,15 @@ Remove the bread from the pack and put butter on it.
 </step>
 
 Now, rephrase the given solution into a consistent, step-by-step format following the guidelines provided. Output only the rephrased solution with each step enclosed in <step> tags.
+It is ESSENTIAL that you do not rephrase the given solution, but only discretize it into logical steps, preserving the exact original wording of the question. 
 """
 
 PERTURB_PROMPT = """
+Given the following question:
+<question>
+{question}
+</question>
+
 You are tasked with perturbing a mathematical reasoning chain and truncating it after the point of perturbation. Here's the reasoning chain you'll be working with:
 
 <reasoning_chain>
@@ -64,22 +70,13 @@ Here are the possible perturbation types you can apply:
 2. Misapplied formula: Using the right formula in the wrong context
 3. Unit conversion mistake: Failing to convert units properly
 4. Dropped negative sign: Forgetting to carry a negative sign through calculations
-5. Misinterpreted problem statement: Solving for the wrong variable
-6. Skipped step: Omitting a crucial step in the solution process
-7. Reversed operation: Using addition instead of subtraction (or similar reversals)
-8. Confusing variables: Mixing up different variables in the problem
-9. Rounding error: Rounding at an inappropriate step or to the wrong precision
-10. Arithmetic sign error: Using the wrong operation (e.g., + instead of ×)
-11. Misused mathematical property: Incorrectly applying distributive/associative properties
-12. Factoring mistake: Errors in factoring algebraic expressions
-13. Incorrect order of operations: Not following PEMDAS correctly
-14. Mishandled fractions: Errors in adding, subtracting, or simplifying fractions
-15. Algebraic manipulation error: Mistakes when rearranging equations
-16. Geometric misconception: Misunderstanding relationships between shapes or angles
-17. Statistical misinterpretation: Misunderstanding probability or statistical concepts
-18. Logical fallacy: Making an incorrect logical leap in reasoning
-19. Dimensional analysis error: Mismatching or ignoring units in calculations
-20. Approximation error: Using approximations inappropriately or inaccurately
+5. Confusing variables: Mixing up different variables in the problem
+6. Arithmetic sign error: Using the wrong operation (e.g., + instead of ×)
+7. Misused mathematical property: Incorrectly applying distributive/associative properties
+8. Incorrect order of operations: Not following PEMDAS correctly
+9. Algebraic manipulation error: Mistakes when rearranging or factoring equations
+10. Geometric misconception: Misunderstanding relationships between shapes or angles
+
 
 Instructions:
 1. Randomly select a step from the reasoning chain.
@@ -88,6 +85,14 @@ Instructions:
 4. Truncate the reasoning chain immediately after the perturbed step, removing all subsequent steps.
 
 Provide your output in the following format:
+
+<selected_step>
+[Randomly select an available step, and output the step number.Do not select the last available step. Instead, select an earlier step, preferring step 2 or 3 if they aren't terminal steps.]
+</selected_step>
+
+<perturbation_type>
+[Select a perturbation type from the list above that is appropriate for the selected step and the problem.]
+</perturbation_type>
 
 <perturbed_chain>
 [Include all steps up to and including the perturbed step. Wrap the collection of steps in <perturbed_chain> tags.]
@@ -101,6 +106,7 @@ Description: [Description of how you applied the perturbation]
 
 Ensure that you only perturb one step and that the chain is truncated immediately after that step.
 Ensure that you include the <perturbation_info> information in your output.
+
 """
 
 PERTURB_SHOTS = [
@@ -164,33 +170,3 @@ Description: I changed the inequality sign in the solution to $x < 1$ instead of
 </output>
 """
 ]
-
-COMPLETION_PROMPT = """
-You are a mathematical problem-solving assistant. You will be presented with a mathematical problem and a partial reasoning trajectory. Your task is to continue the reasoning from where it left off and solve the problem.
-
-Here's the mathematical problem:
-
-<question>
-{question}
-</question>
-
-Here's the partial reasoning trajectory:
-
-<reasoning> 
-{perturbed_reasoning}
-</reasoning>
-
-Please continue the reasoning from where it left off. You should pick up exactly where the reasoning ended and proceed step-by-step towards correctly solving the problem. 
-
-Once you've completed your reasoning, provide the final answer to the problem.
-
-Present your continued reasoning and final answer in the following format:
-
-<continued_reasoning>
-[Your step-by-step continuation of the reasoning]
-</continued_reasoning>
-
-<final_answer>
-[Your final answer to the problem]
-</final_answer>
-"""

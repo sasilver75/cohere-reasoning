@@ -1,45 +1,38 @@
 import os
 import re
 import time
-import asyncio
 from typing import Any
 
 import cohere
-from tqdm.auto import tqdm
 import pandas as pd
-from dotenv import load_dotenv
-import httpx
-
 import prompts
+from dotenv import load_dotenv
 
 # Retrieve API key and create a Cohere client
 load_dotenv()
 key = os.getenv("COHERE_API_KEY")
-co = cohere.AsyncClientV2(key)
+co = cohere.ClientV2(key)
 model_name = "command-r-plus-08-2024"  # Latest release of Command-R Plus
+
+# Test the API
+# print(co.chat(model=model_name, messages=[{"role": "user", "content": "Hello, world!"}]))
 
 # Load the cn_k12 subset from file
 file_path = "datasets/cn_k12_math_problems.csv"
-data = pd.read_csv(file_path, nrows=100)  # Only the first 50 records for discussion
+data = pd.read_csv(file_path, nrows=50)  # Only the first 50 records for discussion
 
-async def stepify(solution: str) -> str:
-    try:
-        step_response = await co.chat(
-            model=model_name,
-            messages=[{"role": "user", "content": prompts.STEPIFY_PROMPT.format(solution=solution)}]
-        )
-    except (httpx.RequestError, httpx.ReadTimeout) as e:
-        return None
+
+def stepify(solution: str) -> str:
+    step_response = co.chat(
+        model=model_name, messages=[{"role": "user", "content": prompts.STEPIFY_PROMPT.format(solution=solution)}]
+    )
     return step_response.message.content[0].text
 
-async def perturb_and_truncate(steps: str) -> str:
-    try:
-        perturbed_response = await co.chat(
-            model=model_name,
-            messages=[{"role": "user", "content": prompts.PERTURB_PROMPT.format(steps=steps)}],
-        )
-    except (httpx.RequestError, httpx.ReadTimeout) as e:
-        return None
+
+def perturb_and_truncate(steps: str) -> str:
+    perturbed_response = co.chat(
+        model=model_name, messages=[{"role": "user", "content": prompts.PERTURB_PROMPT.format(steps=steps)}]
+    )
     return perturbed_response.message.content[0].text
 
 
@@ -76,7 +69,8 @@ def postprocess(output: str) -> dict:
         "perturbation_trace": perturbation_trace,
     }
 
-async def process_row(index: int, row: pd.Series) -> dict:
+
+def process_row(index: int, row: pd.Series) -> dict:
     print(f"Processing row {index}")
     start = time.time()
     problem = row["problem"]
@@ -84,14 +78,8 @@ async def process_row(index: int, row: pd.Series) -> dict:
 
     # Process: No error handling for now
     # Note that temperature defaults to 0.3
-    steps = await stepify(solution)
-    if steps is None:
-        return None
-
-    perturbed_and_truncated = await perturb_and_truncate(steps)
-    if perturbed_and_truncated is None:
-        return None
-
+    steps = stepify(solution)
+    perturbed_and_truncated = perturb_and_truncate(steps)
     postprocessed = postprocess(perturbed_and_truncated)
 
     end = time.time()
@@ -109,18 +97,17 @@ async def process_row(index: int, row: pd.Series) -> dict:
         "trace": postprocessed["perturbation_trace"],
     }
 
-async def main():
+
+def main():
     results = []
-    tasks = [process_row(index, row) for index, row in data.iterrows()]
-    for task in tqdm(asyncio.as_completed(tasks), total=len(tasks)):
-        result = await task
-        if result is not None:
-            results.append(result)
+    for index, row in data.iterrows():
+        results.append(process_row(index, row))
 
     print("Completed processing; saving to CSV")
     # Save results to CSV file
     pd.DataFrame(results).to_csv("datasets/perturbed_solutions.csv", index=False)
     print("Done")
 
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

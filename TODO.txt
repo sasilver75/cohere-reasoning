@@ -48,3 +48,7 @@ using the OpenAI API.
 I think I recall seeing recently a post (and 
 I think I saved it or took a screnshot of it on twitter) regarding
 using the Calude API to continue generations.
+
+
+Use "Question" instead of "Problem"
+Use "Solution"
