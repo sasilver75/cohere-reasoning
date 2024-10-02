@@ -9,37 +9,62 @@ import httpx
 import pandas as pd
 import prompts
 from dotenv import load_dotenv
+from tqdm.asyncio import tqdm as atqdm
 from tqdm.auto import tqdm
 
 # Retrieve API key and create a Cohere client
 load_dotenv()
-key = os.getenv("COHERE_API_KEY")
-co = cohere.AsyncClientV2(key)
+co = cohere.AsyncClientV2(os.getenv("COHERE_API_KEY"))
 model_name = "command-r-plus-08-2024"  # Latest release of Command-R Plus
 
 # Test the API
 # print(co.chat(model=model_name, messages=[{"role": "user", "content": "Hello, world!"}]))
 
 
-async def stepify(solution: str) -> str:
-    step_response = await co.chat(
-        model=model_name, messages=[{"role": "user", "content": prompts.STEPIFY_PROMPT.format(solution=solution)}]
-    )
+async def stepify(solution: str, index: int) -> str:
+    """
+    Given a solution from the NuminaMath dataset, stepify it using Cohere's API.
+    Using a timeout, because it seems like 5% of the time I get httpx ReadErrors after minutes of waiting.
+    """
+    try:
+        step_response = await asyncio.wait_for(
+            co.chat(
+                model=model_name,
+                messages=[{"role": "user", "content": prompts.STEPIFY_PROMPT.format(solution=solution)}],
+                temperature=0,
+            ),
+            timeout=45,
+        )
+    except asyncio.TimeoutError as e:
+        print(f"Timeout occurred while stepifying row {index}: {e}")
+        raise e
     return step_response.message.content[0].text
 
 
-async def perturb_and_truncate(steps: str, question: str, temperature: float) -> str:
-    perturbed_response = await co.chat(
-        model=model_name,
-        messages=[{"role": "user", "content": prompts.PERTURB_PROMPT.format(steps=steps, question=question)}],
-        temperature=temperature,
-    )
+async def perturb_and_truncate(steps: str, question: str, temperature: float, index: int) -> str:
+    """
+    Given a stepified solution from a previous step and a question,
+    select a location in the stepified solution to perturb, a perturbation type, and apply the pertrubation, truncating the remaining solution.
+    """
+    try:
+        perturbed_response = await asyncio.wait_for(
+            co.chat(
+                model=model_name,
+                messages=[{"role": "user", "content": prompts.PERTURB_PROMPT.format(steps=steps, question=question)}],
+                temperature=temperature,
+            ),
+            timeout=45,
+        )
+    except asyncio.TimeoutError as e:
+        print(f"Timeout occurred while perturbing and truncating row {index}: {e}")
+        raise e
     return perturbed_response.message.content[0].text
 
 
 def postprocess(output: str) -> dict:
     """
     Given the string response from the perturb-and-truncate step, extract useful information
+    TODO: With the changes to output format, is this still going to extract what I want?
     """
     # Extract the steps from the perturbed chain
     steps_match = re.search(r"<perturbed_chain>(.*?)</perturbed_chain>", output, re.DOTALL)
@@ -71,24 +96,28 @@ def postprocess(output: str) -> dict:
     }
 
 
-async def process_row(df: pd.DataFrame, index: int, temperature: float) -> dict | None:
+async def process_row(df: pd.DataFrame, index: int, temperature: float, semaphore: asyncio.Semaphore) -> dict | None:
     """
-    Given a dataframe and a row_id `index` to process,
+    Given a dataframe and a row_id `index` to process
+    Acquire semaphore access to limit concurrency, then process the row by stepifying and perturbing, with postprocessing.
     """
-    print(f"Processing row {index}")
+
     row = df.iloc[index]
     question = row["problem"]
     solution = row["solution"]
 
     # Process: No error handling for now
     # Note that temperature defaults to 0.3
-    semaphore = asyncio.Semaphore(15)
-
+    # Acquire semaphore access (releasing when context manager exits)
     async with semaphore:
+        print(f"Processing row {index}; semaphore: {semaphore._value}")
         try:
-            steps = await stepify(solution)
-            perturbed_and_truncated = await perturb_and_truncate(steps, question, temperature)
+            steps = await stepify(solution, index)
+            print(f"Stepped solution for row {index}")
+            perturbed_and_truncated = await perturb_and_truncate(steps, question, temperature, index)
+            print(f"Perturbed and truncated for row {index}")
             postprocessed = postprocess(perturbed_and_truncated)
+            print(f"Postprocessed for row {index}")
         except Exception as e:
             print(f"Exception occurred processing row {index}: {e}")
             return None
@@ -104,15 +133,28 @@ async def process_row(df: pd.DataFrame, index: int, temperature: float) -> dict 
         "type": postprocessed["perturbation_type"],
         "trace": postprocessed["perturbation_trace"],
     }
+    print(f"Finished processing row {index}")
     return result
 
 
 async def process_batch(df: pd.DataFrame, batch: list[int], batch_number: int, temperature: float) -> list:
-    # Asynchronously process each row; processing requires acquiring semaphore access
-    tasks = [process_row(df, id, temperature) for id in batch]
-    results = await asyncio.gather(
-        *tasks, return_exceptions=True
-    )  # Allows for exceptions to be returned, and not cancelling other tasks
+    """
+    Given a dataframe a list of ids that constitute a batch, process each row in the batch concurrently (limited by semaphore concurrency).
+    """
+
+    # Limit concurrency of processing to 15 tasks at a time
+    semaphore = asyncio.Semaphore(15)
+
+    # Create tasks for the asynchronous process each row
+    tasks = [process_row(df, id, temperature, semaphore) for id in batch]
+
+    results = []
+    # Using tqdm.asyncio.tqdm to get a progress bar for each batch.
+    for task in atqdm(asyncio.as_completed(tasks), total=len(tasks), desc=f"Batch {batch_number}"):
+        # In the context of using asyncio.as_completed above, the tasks still run concurrenty, and this loop processes them as they complete.
+        result = await task
+        results.append(result)
+
     filtered = [result for result in results if result is not None]
 
     print(
@@ -152,8 +194,8 @@ async def main():
     df = pd.read_csv("datasets/cn_k12_math_problems.csv", nrows=500)
 
     # Process up to the n'th row from the dataframe
-    n = 300
-    bs = 50
+    n = 100
+    bs = 30
     max_concurrency = 20
     temperature = 0.3
     results = await process_data(df, n, batch_size=bs, temperature=temperature, max_concurrency=max_concurrency)
