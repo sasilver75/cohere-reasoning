@@ -71,7 +71,7 @@ def postprocess(output: str) -> dict:
     }
 
 
-async def process_row(df: pd.DataFrame, index: int, temperature: float) -> dict:
+async def process_row(df: pd.DataFrame, index: int, temperature: float) -> dict | None:
     """
     Given a dataframe and a row_id `index` to process,
     """
@@ -82,12 +82,19 @@ async def process_row(df: pd.DataFrame, index: int, temperature: float) -> dict:
 
     # Process: No error handling for now
     # Note that temperature defaults to 0.3
-    steps = await stepify(solution)
-    perturbed_and_truncated = await perturb_and_truncate(steps, question, temperature)
-    postprocessed = postprocess(perturbed_and_truncated)
+    semaphore = asyncio.Semaphore(15)
+
+    async with semaphore:
+        try:
+            steps = await stepify(solution)
+            perturbed_and_truncated = await perturb_and_truncate(steps, question, temperature)
+            postprocessed = postprocess(perturbed_and_truncated)
+        except Exception as e:
+            print(f"Exception occurred processing row {index}: {e}")
+            return None
 
     # Package the results
-    return {
+    result = {
         "id": index,
         "question": question,
         "solution": solution,
@@ -97,47 +104,12 @@ async def process_row(df: pd.DataFrame, index: int, temperature: float) -> dict:
         "type": postprocessed["perturbation_type"],
         "trace": postprocessed["perturbation_trace"],
     }
+    return result
 
 
-# async def main():
-#     # Load the cn_k12 subset from file
-#     file_path = "datasets/cn_k12_math_problems.csv"
-#     data = pd.read_csv(file_path, nrows=50)
-
-#     TEMPERATURES = [(0, 0), (.3, 3), (.6,6)]
-
-#     # Process and accumulate
-#     for temperature, label in TEMPERATURES:
-#         results = []
-#         tasks = [process_row(index, row, temperature) for index, row in data.iterrows()]
-
-#         for task in tqdm(asyncio.as_completed(tasks), total=len(tasks)):
-#             result = await task
-#             results.append(result)
-
-#         # Save results to CSV file
-#         pd.DataFrame(results).to_csv(f"datasets/perturbed_solutions_{label}.csv", index=False)
-#         print(f"Done with {label}")
-
-#     print("Complete")
-
-
-async def process_batch(
-    df: pd.DataFrame, batch: list[int], batch_number: int, semaphore: asyncio.Semaphore, temperature: float
-) -> list:
-    async def process_row_with_sempaphore(id: int):
-        async with semaphore:
-            try:
-                return await process_row(id, df.iloc[id], temperature)
-            except Exception as e:
-                print(f"Exception occurred processing row {id}: {e}")
-            return None
-
-    print(f"Processing batch {batch_number}")
-
-    tasks = [
-        process_row_with_sempaphore(id) for id in batch
-    ]  # Asynchronously process each row; processing requires acquiring semaphore access
+async def process_batch(df: pd.DataFrame, batch: list[int], batch_number: int, temperature: float) -> list:
+    # Asynchronously process each row; processing requires acquiring semaphore access
+    tasks = [process_row(df, id, temperature) for id in batch]
     results = await asyncio.gather(
         *tasks, return_exceptions=True
     )  # Allows for exceptions to be returned, and not cancelling other tasks
@@ -157,7 +129,6 @@ async def process_data(
     Processes n rows from the cn_k12 dataset CSV file, using batch sizes of size bs when invoking Cohere APIs.
     """
     print("Processing data")
-    semaphore = asyncio.Semaphore()
 
     all_results = []
     # Generate a list of indices for each batch
@@ -166,7 +137,7 @@ async def process_data(
         batch = list(range(i, min(i + batch_size, n)))
         print(f"Processing batch for indices {batch}")
         # Give the data, the batch ids, and a the sempaphore that limits concurrency
-        results = await process_batch(df, batch, batch_number, semaphore, temperature)
+        results = await process_batch(df, batch, batch_number, temperature)
         all_results.extend(results)
         print(
             f"Processed batch {i//batch_size + 1}/{(n + batch_size - 1)//batch_size}, total results: {len(all_results)}"
