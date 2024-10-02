@@ -27,7 +27,7 @@ for index, row in data[6:9].iterrows():
     # print(row["problem"], "\n", row["stepped"], "\n", row["perturbed"], "\n", row["type"], "\n", row["trace"], "\n",)
     print(
         f"""
-    Problem: {row["problem"]} \n
+    Question: {row["question"]} \n
     Answer: {row["solution"]} \n
     Stepped: {row["stepped"]} \n
     Perturbed: {row["perturbed"]} \n

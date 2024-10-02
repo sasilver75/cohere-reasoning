@@ -99,24 +99,97 @@ async def process_row(df: pd.DataFrame, index: int, temperature: float) -> dict:
     }
 
 
+# async def main():
+#     # Load the cn_k12 subset from file
+#     file_path = "datasets/cn_k12_math_problems.csv"
+#     data = pd.read_csv(file_path, nrows=50)
+
+#     TEMPERATURES = [(0, 0), (.3, 3), (.6,6)]
+
+#     # Process and accumulate
+#     for temperature, label in TEMPERATURES:
+#         results = []
+#         tasks = [process_row(index, row, temperature) for index, row in data.iterrows()]
+
+#         for task in tqdm(asyncio.as_completed(tasks), total=len(tasks)):
+#             result = await task
+#             results.append(result)
+
+#         # Save results to CSV file
+#         pd.DataFrame(results).to_csv(f"datasets/perturbed_solutions_{label}.csv", index=False)
+#         print(f"Done with {label}")
+
+#     print("Complete")
+
+
+async def process_batch(
+    df: pd.DataFrame, batch: list[int], batch_number: int, semaphore: asyncio.Semaphore, temperature: float
+) -> list:
+    async def process_row_with_sempaphore(id: int):
+        async with semaphore:
+            try:
+                return await process_row(id, df.iloc[id], temperature)
+            except Exception as e:
+                print(f"Exception occurred processing row {id}: {e}")
+            return None
+
+    print(f"Processing batch {batch_number}")
+
+    tasks = [
+        process_row_with_sempaphore(id) for id in batch
+    ]  # Asynchronously process each row; processing requires acquiring semaphore access
+    results = await asyncio.gather(
+        *tasks, return_exceptions=True
+    )  # Allows for exceptions to be returned, and not cancelling other tasks
+    filtered = [result for result in results if result is not None]
+
+    print(
+        f"Of {len(results)} rows, {len(filtered)} were processed successfully ({len(results) - len(filtered)} failed)"
+    )
+
+    return filtered
+
+
+async def process_data(
+    df: pd.DataFrame, n: int, batch_size: int = 50, temperature: float = 0.3, max_concurrency: int = 20, timeout=45
+) -> list:
+    """
+    Processes n rows from the cn_k12 dataset CSV file, using batch sizes of size bs when invoking Cohere APIs.
+    """
+    print("Processing data")
+    semaphore = asyncio.Semaphore()
+
+    all_results = []
+    # Generate a list of indices for each batch
+    for i in range(0, n, batch_size):
+        batch_number = i // batch_size + 1
+        batch = list(range(i, min(i + batch_size, n)))
+        print(f"Processing batch for indices {batch}")
+        # Give the data, the batch ids, and a the sempaphore that limits concurrency
+        results = await process_batch(df, batch, batch_number, semaphore, temperature)
+        all_results.extend(results)
+        print(
+            f"Processed batch {i//batch_size + 1}/{(n + batch_size - 1)//batch_size}, total results: {len(all_results)}"
+        )
+
+    print("Finished processing all data")
+    return all_results
+
+
 async def main():
-    # Load the cn_k12 subset from file
-    file_path = "datasets/cn_k12_math_problems.csv"
-    data = pd.read_csv(file_path, nrows=50)
+    # Load cn_k12 subset from file
+    df = pd.read_csv("datasets/cn_k12_math_problems.csv", nrows=500)
 
-    TEMPERATURES = [(0, 0), (0.3, 3), (0.6, 6)]
+    # Process up to the n'th row from the dataframe
+    n = 300
+    bs = 50
+    max_concurrency = 20
+    temperature = 0.3
+    results = await process_data(df, n, batch_size=bs, temperature=temperature, max_concurrency=max_concurrency)
 
-    # Process and accumulate
-    for temperature, label in TEMPERATURES:
-        results = []
-        tasks = [process_row(index, row, temperature) for index, row in data.iterrows()]
+    print("Finished processing rows")
+    return results
 
-        for task in tqdm(asyncio.as_completed(tasks), total=len(tasks)):
-            result = await task
-            results.append(result)
 
-        # Save results to CSV file
-        pd.DataFrame(results).to_csv(f"datasets/perturbed_solutions_{label}.csv", index=False)
-        print(f"Done with {label}")
-
-    print("Complete")
+if __name__ == "__main__":
+    asyncio.run(main())
