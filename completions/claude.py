@@ -1,4 +1,5 @@
 import os
+import re
 
 import anthropic
 import pandas as pd
@@ -25,7 +26,7 @@ print(len(data))
 #     print(row["id"], row["question"], row["stepped"].count("<step>"))
 #     print("\n\n\n\n")
 
-rows = [row for index, row in data.iterrows() if row["stepped"].count("<step>") <= 3]
+rows = [row for index, row in data.iterrows() if len(re.findall(r"Step \d+:", row["stepped"])) <= 3]
 print(f"Number of rows: {len(rows)}")
 
 for row in rows:
@@ -34,7 +35,7 @@ for row in rows:
         f"""
     [[ID]]: {row["id"]}
     [[Question]]: {row["question"]}
-    [[Answer]]: {row["solution"]} 
+    [[Stepified Answer]]: {row["stepped"]} 
     [[Type]]: {row["type"]}
     [[Step]]: {row["step"]}
     [[Trace]]: {row["trace"]} \n

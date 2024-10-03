@@ -86,7 +86,7 @@ Provide your output in the following format:
 <output>
 
 <selected_step>
-[Randomly select an available step, and output the step number. Do not select the last available step. Instead, select an earlier step, preferring step 2 or 3 if they aren't terminal steps. Do not use newline characters.]
+[Randomly select an available step, and output the step number. Do not select the last available step. Instead, select an earlier step, preferring step 2 or 3 if they aren't terminal steps. Do not use newline characters. Your response should be an integer like "1" or "2", NOT "Step 1" or "Step 2"]
 </selected_step>
 
 <perturbation_type>
@@ -94,7 +94,7 @@ Provide your output in the following format:
 </perturbation_type>
 
 <perturbed_chain>
-[Include all steps up to and including the perturbed step. Wrap the collection of steps in <perturbed_chain></perturbed_chain> tags.]
+[Include all steps up to and including the perturbed step, making sure that each step has a "Step X:" prefix, where X is the step number. Make sure there is a single newline between each step.]
 </perturbed_chain>
 
 <description>
