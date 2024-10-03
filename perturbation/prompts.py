@@ -9,42 +9,38 @@ Here is the solution:
 
 Guidelines for rephrasing:
 1. Split the solution into logical steps.
-2. Each step should be enclosed in <step> tags.
-3. Do not add any new information or mathematical knowledge not present in the original solution.
-4. Do not remove any meaningful information from the original solution.
+2. Each step should be prefixed with a "Step X: " prefix, with X being the step number.
+3. DO NOT add any new information or mathematical knowledge not present in the original solution.
+4. DO NOT remove any meaningful information from the original solution.
 5. Maintain the original level of detail in each step.
 6. If a single sentence contains multiple distinct steps, split it into separate steps.
-7. If multiple sentences describe a single logical step, keep them together in one <step> tag.
+7. If multiple sentences describe a single logical step, keep them together in one step.
 
-Your output should consist only of the rephrased solution, with each step enclosed in <step> tags. Do not include any additional text or explanations outside of these tags.
+Your output should consist only of the rephrased solution, with each prefixed with a "Step X: " prefix, with X being the step number.
+Do not include any additional text or explanations outside of these tags.
 
-Here are examples of good outputs:
+Here are 3 examples of good outputs:
 
-Example 1:
-<step>
-First, unwrap the bread from the packaging. It's important to make sure that no plastic is left on the bread.
-</step>
+<example>
+Step 1: First, unwrap the bread from the packaging. It's important to make sure that no plastic is left on the bread.
 
-<step>
-Then, apply some butter to a piece of bread.
-</step>
+Step 2:Then, apply some butter to a piece of bread.
+</example>
 
-Example 2:
-<step>
-Remove a piece of bread from the packaging
-</step>
+<example>
+Step 1:Remove a piece of bread from the packaging
 
-<step>
-Apply a thick smear of butter to the top side of the piece of bread.
-</step>
+Step 2: Apply a thick smear of butter to the top side of the piece of bread.
 
-Example 3:
-<step>
-Remove the bread from the pack and put butter on it.
-</step>
+Step 3: Enjoy your delicious open-face butter sandwich!
+</example>
 
-Now, rephrase the given solution into a consistent, step-by-step format following the guidelines provided. Output only the rephrased solution with each step enclosed in <step> tags.
-It is ESSENTIAL that you do not rephrase the given solution, but only discretize it into logical steps, preserving the exact original wording of the question. 
+<example>
+Step 1:Remove the bread from the pack and put butter on it.
+</example>
+
+Now, rephrase the given solution into a consistent, step-by-step format following the guidelines provided. Output only the rephrased solution with each step prefixed by "Step X: ", with X being the step number.
+It is ESSENTIAL that you do not rephrase the given solution, but only discretize it into logical steps, preserving the EXACT original wording of the solution. 
 """
 
 PERTURB_PROMPT = """
@@ -81,13 +77,16 @@ Here are the possible perturbation types you can apply:
 Instructions:
 1. Randomly select a step from the reasoning chain.
 2. Choose an appropriate perturbation type from the list above that fits the selected step.
-3. Apply the perturbation to the selected step, ensuring that the error is introduced in a way that seems plausible but is incorrect. DO NOT include the type of perturbation you applied. DO NOT include any inline description of what changed when you applied the perturbation.
-4. Truncate the reasoning chain immediately after the perturbed step, removing all subsequent steps.
+3a. Apply the perturbation to the selected step, ensuring that the error is introduced in a way that seems plausible but is incorrect. DO NOT include the type of perturbation you applied. DO NOT include any inline description of what changed when you applied the perturbation.
+3b. Truncate the reasoning chain immediately after the perturbed step, removing all subsequent steps.
+4. Provide a description for the perturbation applied, explicitly noting what was changed.
 
 Provide your output in the following format:
 
+<output>
+
 <selected_step>
-[Randomly select an available step, and output the step number.Do not select the last available step. Instead, select an earlier step, preferring step 2 or 3 if they aren't terminal steps. Do not use newline characters.]
+[Randomly select an available step, and output the step number. Do not select the last available step. Instead, select an earlier step, preferring step 2 or 3 if they aren't terminal steps. Do not use newline characters.]
 </selected_step>
 
 <perturbation_type>
@@ -95,12 +94,16 @@ Provide your output in the following format:
 </perturbation_type>
 
 <perturbed_chain>
-[Include all steps up to and including the perturbed step. Wrap the collection of steps in <perturbed_chain> tags.]
+[Include all steps up to and including the perturbed step. Wrap the collection of steps in <perturbed_chain></perturbed_chain> tags.]
 </perturbed_chain>
 
 <description>
 [Description how the application was applied, explicitly noting what was changed. Do not use newline characters.]
 </description>
 
+</output>
+
+Ensure that you remember to close your tags (eg </selected_step>, </perturbation_type>, </perturbed_chain>, </description>).
 Ensure that you only perturb a single and that the chain is truncated immediately after that step.
+Perturbation should be applied an early reasoning step (e.g. 2 or 3), and NOT a step that outputs the answer to the problem or one of its explicit subproblems.
 """

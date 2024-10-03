@@ -1,6 +1,7 @@
 import asyncio
 import os
 import re
+from typing import Optional
 
 import cohere
 import pandas as pd
@@ -54,7 +55,7 @@ async def perturb_and_truncate(steps: str, question: str, temperature: float, in
     return perturbed_response.message.content[0].text
 
 
-def postprocess(output: str) -> dict:
+def postprocess(output: str) -> dict[str, Optional[str | int]]:
     """
     Given the string response from the perturb-and-truncate step, extract useful information
     """
@@ -62,7 +63,6 @@ def postprocess(output: str) -> dict:
     steps_match = re.search(r"<perturbed_chain>(.*?)</perturbed_chain>", output, re.DOTALL)
     steps = steps_match.group(1).strip() if steps_match else None
     if steps is not None:
-        steps = re.sub(r"</?step>", "", steps).replace("\n", "").strip()
         steps = re.sub(r"\s+", " ", steps)  # Replace multiple spaces with a single space
 
     # Extract the selected step number

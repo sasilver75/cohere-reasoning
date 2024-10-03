@@ -52,3 +52,9 @@ using the Calude API to continue generations.
 
 Use "Question" instead of "Problem"
 Use "Solution"
+
+----------- Oct 3 2024 -----------
+[] Some shots for the stepification and perturbation pipeline
+
+----
+

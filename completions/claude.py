@@ -21,28 +21,28 @@ file_path = "datasets/perturbed_solutions_0.csv"
 data = pd.read_csv(file_path)
 print(len(data))
 
-for index, row in data.iterrows():
-    print(row["id"], row["question"], row["stepped"].count("<step>"))
-    print("\n\n\n\n")
+# for index, row in data.iterrows():
+#     print(row["id"], row["question"], row["stepped"].count("<step>"))
+#     print("\n\n\n\n")
 
 rows = [row for index, row in data.iterrows() if row["stepped"].count("<step>") <= 3]
 print(f"Number of rows: {len(rows)}")
 
 for row in rows:
     print("\n --------START--------- \n")
-    print(  # Step: {row["step"]} \n
+    print(  # [[Stepped]]: {row["stepped"]} \n
         f"""
-    Question: {row["question"]} \n
-    Answer: {row["solution"]} \n
-    Stepped: {row["stepped"]} \n
-    
-    Type: {row["type"]} \n
-    Trace: {row["trace"]} \n
-    Perturbed: {row["perturbed"]} \n
+    [[ID]]: {row["id"]}
+    [[Question]]: {row["question"]}
+    [[Answer]]: {row["solution"]} 
+    [[Type]]: {row["type"]}
+    [[Step]]: {row["step"]}
+    [[Trace]]: {row["trace"]} \n
+    [[Perturbed]]: {row["perturbed"]} \n
     """
     )
     # print(prompts.COMPLETION_PROMPT.format(question=row["problem"], perturbed_reasoning=row["perturbed"]))
-    print("\n~~~~~~~~~Completion~~~~~~~~~~~~~\n")
+    print("\n~~~~~~~~~Completion~~~~~~~~~~~~~ (Should continue from the Perturbed reasoning)\n")
 
     completion = client.messages.create(
         model="claude-3-5-sonnet-20240620",
