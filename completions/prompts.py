@@ -27,3 +27,15 @@ Present your continued reasoning and final answer in the following format:
 [Your final answer to the problem]
 </final_answer>
 """
+
+COMPLETION_PROMPT_V2_USER = """
+{question}
+
+Please solve this problem step-by-step, presenting the final answer in <answer></answer> tags.
+"""
+
+COMPLETION_PROMPT_V2_ASSISTANT = """
+Certainly. Here is the step-by-step reasoning and final answer to the problem:
+
+{perturbed_reasoning}
+"""

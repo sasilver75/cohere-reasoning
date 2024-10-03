@@ -57,13 +57,12 @@ async def perturb_and_truncate(steps: str, question: str, temperature: float, in
 def postprocess(output: str) -> dict:
     """
     Given the string response from the perturb-and-truncate step, extract useful information
-    TODO: With the changes to output format, is this still going to extract what I want?
     """
     # Extract the steps from the perturbed chain
     steps_match = re.search(r"<perturbed_chain>(.*?)</perturbed_chain>", output, re.DOTALL)
     steps = steps_match.group(1).strip() if steps_match else None
     if steps is not None:
-        steps = re.sub(r"</?step>", "", steps).replace("\n", " ").strip()
+        steps = re.sub(r"</?step>", "", steps).replace("\n", "").strip()
         steps = re.sub(r"\s+", " ", steps)  # Replace multiple spaces with a single space
 
     # Extract the selected step number
@@ -91,8 +90,8 @@ async def process_row(df: pd.DataFrame, index: int, temperature: float, semaphor
     Given a dataframe and a row_id `index` to process
     Acquire semaphore access to limit concurrency, then process the row by stepifying and perturbing, with postprocessing.
     """
-
     row = df.iloc[index]
+    id = int(row["index"])
     question = row["problem"]
     solution = row["solution"]
 
@@ -109,7 +108,7 @@ async def process_row(df: pd.DataFrame, index: int, temperature: float, semaphor
             postprocessed = postprocess(perturbed_and_truncated)
             print(f"Postprocessed for row {index}")
         except Exception as e:
-            print(f"Exception occurred processing row {index}: {e}")
+            print(f"Exception occurred processing row {index}: {type(e)}: {e}")
             return None
 
     if any(val == None for val in postprocessed.values()):
@@ -119,7 +118,7 @@ async def process_row(df: pd.DataFrame, index: int, temperature: float, semaphor
 
     # Package the results
     result = {
-        "id": index,
+        "id": id,
         "question": question,
         "solution": solution,
         "stepped": steps,
@@ -190,12 +189,12 @@ async def main():
 
     # Process up to the n'th row from the dataframe. Works just fine if n//bs!=0, or if bs>=n
     input_filename = "datasets/cn_k12_math_problems.csv"
-    n = 2
-    bs = 15
+    n = 50
+    bs = 50
     for temperature, label in [
         (0, "0"),
-        (0.3, "3"),
-        (0.6, "6"),
+        # (0.3, "3"),
+        # (0.6, "6"),
     ]:
         # Load cn_k12 subset from file
         df = pd.read_csv(input_filename, nrows=500)

@@ -99,72 +99,8 @@ Provide your output in the following format:
 </perturbed_chain>
 
 <description>
-[Description of the application of the perturbation. Do not use newline characters.]
+[Description how the application was applied, explicitly noting what was changed. Do not use newline characters.]
 </description>
 
-Ensure that you only perturb one step and that the chain is truncated immediately after that step.
-Ensure that you include the <perturbation_info> information in your output.
-
+Ensure that you only perturb a single and that the chain is truncated immediately after that step.
 """
-
-PERTURB_SHOTS = [
-    """
-Given steps:
-<input>
-<step>
-To ensure the function $f(x) - g(x)$ is defined, we need to consider the domain of the individual logarithmic functions. The domain of $\log_a(1+x)$ is $1+x > 0$, and the domain of $\log_a(1-x)$ is $1-x > 0$.
-</step>
-
-<step>
-Solving the system of inequalities $1+x > 0$ and $1-x > 0$, we find that $-1 < x < 1$. Therefore, the domain of the function $f(x) - g(x)$ is $(-1, 1)$.
-</step>
-
-<step>
-Now, let's determine if $f(x) - g(x)$ is an odd function. Since the domain $(-1, 1)$ is symmetric about the origin, we can define a new function $F(x) = f(x) - g(x)$. We then evaluate $F(-x) = f(-x) - g(-x) = \log_a(1-x) - \log_a(1+x)$.
-</step>
-
-<step>
-Simplifying further, we get $F(-x) = -[\log_a(1+x) - \log_a(1-x)] = -F(x)$. This shows that $F(x)$ is an odd function, and consequently, $f(x) - g(x)$ is also an odd function.
-</step>
-
-<step>
-Next, we want to find the range of $x$ for which $f(x) - g(x) > 0$. From this inequality, we can conclude that $f(x) > g(x)$.
-</step>
-
-<step>
-Considering the case when $a > 1$, we have the system of inequalities: $-1 < x < 1$ and $1+x > 1-x$, which simplifies to $0 < x < 1$.
-</step>
-
-<step>
-For $0 < a < 1$, the system of inequalities becomes: $-1 < x < 1$ and $1+x < 1-x$, which simplifies to $-1 < x < 0$.
-</step>
-
-<step>
-In summary, if $a > 1$, the solution set for the inequality $f(x) - g(x) > 0$ is $(0, 1)$, and if $0 < a < 1$, the solution set is $(-1, 0)$.
-</step>
-</input>
-
-A valid output:
-<output>
-<perturbed_chain>
-<step>
-Given the functions $f(x) = \log_a(1+x)$ and $g(x) = \log_a(1-x)$, where $a>0$ and $a \neq 1$, we want to find the domain of the function $f(x) - g(x)$.
-</step>
-
-<step>
-To ensure the function $f(x) - g(x)$ is defined, we need to consider the domain of the individual logarithmic functions. The domain of $\log_a(1+x)$ is $1+x > 0$, and the domain of $\log_a(1-x)$ is $1-x > 0$.
-</step>
-
-<step>
-Solving the system of inequalities $1+x > 0$ and $1-x > 0$, we find that $x < 1$. Therefore, the domain of the function $f(x) - g(x)$ is $(-\infty, 1)$.
-</step>
-</perturbed_chain>
-
-<perturbation_info>
-Selected Step: 3
-Perturbation Type: Arithmetic sign error
-Description: I changed the inequality sign in the solution to $x < 1$ instead of $-1 < x < 1$.
-</perturbation_info>
-</output>
-"""
-]
