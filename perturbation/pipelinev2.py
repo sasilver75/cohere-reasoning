@@ -186,6 +186,8 @@ async def process_data(df: pd.DataFrame, n: int, batch_size: int = 50, temperatu
 
 
 async def main():
+    # TODO: Right now, batching is just a cosmetic thing, since the concurrency is limited to 15 by the asyncio.semaphore anyways.
+
     # Process up to the n'th row from the dataframe. Works just fine if n//bs!=0, or if bs>=n
     input_filename = "datasets/cn_k12_math_problems.csv"
     n = 2
