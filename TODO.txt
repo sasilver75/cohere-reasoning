@@ -54,7 +54,38 @@ Use "Question" instead of "Problem"
 Use "Solution"
 
 ----------- Oct 3 2024 -----------
-[] Some shots for the stepification and perturbation pipeline
+Observed
+- Some incorrect questions/answers in the dataset
+- Completion behavior
+    - Restarting CoT and ignoring perturbed
+    - Playing given perturbation to completion and not recognizing error (free response)
+    - Playing given perturabtion to completion and recognizing error only because it's not in the MC options
 
+Doing:
+- Cohere raw completions @ Jimin
+- Confirming that I can't do raw completion with OpenAI
+- Updating prompt for completion to increase adherence @ Eddie
+- Comparisons of temperature for perturbation
+
+I was having some problems about the perturbation basically just changing the final answer in the series of steps,
+and my current prompt says something like "preference the second or third step in the reasoning chain, assuming they aren't 
+terminal steps, but choose one where your selected perturbation type makes sense to apply. Is that okay, or do we want a more potentially-uniform
+distribution of steps? I also had the idea that an earlier perturbation might give more time for an inflighnt recovery.
+I think another result of it unfortunately was that the perturbations at different temperatures are more likely to be the same,
+because they're all preferencing the same steps.I could do something like ask the model output whether it's a two-step problem,
+and to ask it to output how many steps are in the problem, and then output what the reasonable range of steps to perturb would be,
+and then select a step from that range that makes sense to perturb, given the selected perturbation type.
+
+Decision on temperature for perturbation?
+- For the low N that I've examined closely, it seems like T=0 and T=0.3 are basically indistiguishable
+- We could do a variety of perturbations at different temperatures and ask an LM for the best one (or have it rate them with a rubric, or explanation -> rate)
+
+TODO:
+[] Some real shots for the stepification and perturbation pipeline
+[] Another prompt to help me parse whether recovery occurred (immediately, after a few steps, or after arriving at an answer) and whether a right answer was reached
+[] Propmt for detection of recovery and correctness
+[] What inference provider for other models?
+[] What analysis do we want to run?
+    - Right now I'm running standard temperature for completions, but we wanted to run at varying temperatures and compare recoveries
+    - 
 ----
-

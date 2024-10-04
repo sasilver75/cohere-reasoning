@@ -26,10 +26,10 @@ print(len(data))
 #     print(row["id"], row["question"], row["stepped"].count("<step>"))
 #     print("\n\n\n\n")
 
-rows = [row for index, row in data.iterrows() if len(re.findall(r"Step \d+:", row["stepped"])) <= 3]
+# rows = [row for index, row in data.iterrows() if len(re.findall(r"Step \d+:", row["stepped"])) <= 3]
 print(f"Number of rows: {len(rows)}")
 
-for row in rows:
+for index, row in data.iterrows():
     print("\n --------START--------- \n")
     print(  # [[Stepped]]: {row["stepped"]} \n
         f"""

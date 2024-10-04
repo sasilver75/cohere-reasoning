@@ -193,8 +193,8 @@ async def main():
     bs = 50
     for temperature, label in [
         (0, "0"),
-        # (0.3, "3"),
-        # (0.6, "6"),
+        (0.3, "3"),
+        (0.6, "6"),
     ]:
         # Load cn_k12 subset from file
         df = pd.read_csv(input_filename, nrows=500)
