@@ -27,8 +27,8 @@ print(len(data))
 #     print("\n\n\n\n")
 
 # rows = [row for index, row in data.iterrows() if len(re.findall(r"Step \d+:", row["stepped"])) <= 3]
-print(f"Number of rows: {len(rows)}")
 
+acc = []
 for index, row in data.iterrows():
     print("\n --------START--------- \n")
     print(  # [[Stepped]]: {row["stepped"]} \n
@@ -61,4 +61,7 @@ for index, row in data.iterrows():
     )
 
     print(completion.content[0].text)
+    acc.append(completion.content[0].text)
     print("\n --------END---------- \n\n")
+
+data["completion"] = acc

@@ -83,9 +83,40 @@ Decision on temperature for perturbation?
 TODO:
 [] Some real shots for the stepification and perturbation pipeline
 [] Another prompt to help me parse whether recovery occurred (immediately, after a few steps, or after arriving at an answer) and whether a right answer was reached
-[] Propmt for detection of recovery and correctness
+[] Prompt for detection of recovery and correctness
 [] What inference provider for other models?
+- E: Default to biggest models, maybe 3.2?
 [] What analysis do we want to run?
     - Right now I'm running standard temperature for completions, but we wanted to run at varying temperatures and compare recoveries
-    - 
+    -
+
+
+Look and see which API providers might support raw prompting. 
+
+Should restrict the study to models where we can use raw propmting.
+
+Notes
+- If you take the experiments you've done so far and oing, and try to condense that into two pages 
+- 2 Pages of the takeaways of experiments, distill the experiments in the slack thread into a narrative. (What are we seeing?)
+- Try for a smaller batch size to iterate on
+- Get some good exemplar for the prompts
+
+Eddies view on temperature: It should make the model more diverse; when you crank up termpature, model gets worse on average.
+Stick to a low temperature and try to inject data into the prompt as the means for contreolled diversity.
+For perturbations; few shot prompting, say if your few-shot prompt has 4 shots in it, you shuffle in 4 of your 20 examples every time.  
+It's fine for now that I'm targeting earlysteps in the chians. It's more important that the perturbations we make are "real" perturbations, for lack of a better term.
+
+> Ping outside buried thread
+
+Data filtering questions:
+- Don't worry about the multipart questions for now. (Unless ther's some obvious heuristic way of filtering)
+
+
+Coherea and Anthropic runthrough full round
+Analyze in a 2 page google doc for the friends (takeaways)
+include detection and assessment of correction
+Some real shots for stepificiatio and perturbation and assessment
+"Full loop on 10 datapoints is more valuable than 100,000 datapoinmts; full loop will be useful"
+
+
 ----
