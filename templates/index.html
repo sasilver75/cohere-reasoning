@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Problem Viewer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="scroll-container left-panel">
+            <div class="scroll-content">
+                <h2>ID</h2>
+                <div id="id"></div>
+                <h2>Question</h2>
+                <div id="question"></div>
+                <h2>Stepped</h2>
+                <div id="stepped"></div>
+                <h2>Perturbed</h2>
+                <div id="perturbed"></div>
+                <h2>Step</h2>
+                <div id="step"></div>
+                <h2>Type</h2>
+                <div id="type"></div>
+                <h2>Trace</h2>
+                <div id="trace"></div>
+            </div>
+        </div>
+        <div class="scroll-container right-panel">
+            <div class="scroll-content">
+                <h2>Completion</h2>
+                <div id="completion"></div>
+            </div>
+        </div>
+    </div>
+    <div class="navigation">
+        <button id="prev">Previous</button>
+        <span id="current-record"></span>
+        <button id="next">Next</button>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

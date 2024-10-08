@@ -63,7 +63,7 @@ def postprocess(output: str) -> dict[str, Optional[str | int]]:
     steps_match = re.search(r"<perturbed_chain>(.*?)</perturbed_chain>", output, re.DOTALL)
     steps = steps_match.group(1).strip() if steps_match else None
     if steps is not None:
-        steps = re.sub(r"\s+", " ", steps)  # Replace multiple spaces with a single space
+        steps = re.sub(r" +", " ", steps)  # Replace multiple spaces with a single space
 
     # Extract the selected step number
     step_match = re.search(r"<selected_step>(.*?)</selected_step>", output, re.DOTALL)
@@ -193,8 +193,8 @@ async def main():
     bs = 50
     for temperature, label in [
         (0, "0"),
-        (0.3, "3"),
-        (0.6, "6"),
+        # (0.3, "3"),
+        # (0.6, "6"),
     ]:
         # Load cn_k12 subset from file
         df = pd.read_csv(input_filename, nrows=500)

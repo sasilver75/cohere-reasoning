@@ -42,11 +42,12 @@ completions = []
 data.head()
 from tqdm import tqdm
 
-for index, row in tqdm(data.iterrows(), total=len(data), desc="Processing rows"):
+for index, row in tqdm(data[0:10].iterrows(), total=len(data), desc="Processing rows"):
     print("------------------Row------------------")
     print_row_information(row)
     completions.append(get_row_completion(row))
     print("------------------End of Row------------------")
 
 data["completion"] = completions
+
 data.to_csv("datasets/perturbed_solutions_0_completions_command_r.csv", index=False)
